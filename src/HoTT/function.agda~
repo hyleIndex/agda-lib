@@ -1,0 +1,10 @@
+{-# OPTIONS --without-K --rewriting #-}
+
+module HoTT.function where
+
+open import HoTT.type
+open import HoTT.core
+
+_∘_ : ∀ {i j k} {A : Type i} {B : Type j} {C : Type k}
+      → (B → C) → (A → B) → (A → C)
+g ∘ f = λ x → g (f x)
