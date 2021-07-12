@@ -24,3 +24,26 @@ infixr 9 _∘'_
 
 const : ∀ {i j} {A : Type i} {B : Type j} → A → B → A
 const x = λ _ → x
+
+Extensionality : ∀ i j → Type (lmax (lsuc i) (lsuc j))
+Extensionality i j = {X : Type i} {Y : Type j}
+                     → {f g : X → Y}
+                     → ((x : X) → f x ≡ g x)
+                     → f ≡ g
+
+Extensionality' : ∀ i j → Type (lmax (lsuc i) (lsuc j))
+Extensionality' i j = {X : Type i} {Y : X → Type j}
+                      → {f g : (x : X) → (Y x)}
+                      → ((x : X) → f x ≡ g x)
+                      → f ≡ g
+
+StrongExt : ∀ i j → Type (lmax (lsuc i) (lsuc j))
+StrongExt i j = {X : Type i} {Y : X → Type j}
+                →  {f g : (x : X) → (Y x)}
+                → (∀ x → f x ≡ g x) ≡ (f ≡ g)
+
+funext-inv : ∀ {i j} {X : Type i} {Y : X → Type j}
+             → {f g : (x : X) → (Y x)}
+             → (f ≡ g)
+             → (∀ x → f x ≡ g x)
+funext-inv refl x = refl
