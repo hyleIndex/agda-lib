@@ -18,6 +18,11 @@ transport : ∀ {i j} {A : Type i} {x y : A} (B : A → Type j)
             → (B x → B y)
 transport B refl b = b
 
+transport2 : ∀ {i j k} {A : Type i} {B : A → Type j} {a a' : A} {b : B a} {b' : B a'}
+             (C : (a : A) → B a → Type k) (p : a ≡ a')
+             → transport B p b ≡ b' → C a b → C a' b'
+transport2 C refl refl c = c
+
 coe : ∀ {i} {A B : Type i}
       → A ≡ B
       → A → B

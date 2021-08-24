@@ -109,3 +109,83 @@ sym-ap f refl = refl
 transport-∙ : ∀ {i j} {A : Type i} {x y z : A} (B : A → Type j) (p : x ≡ y) (q : y ≡ z) (b : B x)
               → transport B (p ∙ q) b ≡ transport B q (transport B p b)
 transport-∙ B refl refl b = refl
+
+transport-∙-ext : ∀ {i j} {A : Type i} {x y z : A} (B : A → Type j) (p : x ≡ y) (q : y ≡ z)
+                  → transport B (p ∙ q) ≡ (transport B q) ∘ (transport B p)
+transport-∙-ext B refl refl = refl
+
+coe-∙ : ∀ {i} {A B C : Type i} (p : A ≡ B) (q : B ≡ C)
+        → coe (p ∙ q) ≡ coe q ∘ coe p
+coe-∙ refl relf = refl
+
+transport-≡-ap : ∀ {i j} {A : Type i} {B : Type j} {x y : A} (f g : A → B) (p : x ≡ y) (q : f x ≡ g x)
+                 → transport (λ x → f x ≡ g x) p q ≡ ! ap f p ∙ q ∙ ap g p
+transport-≡-ap f g refl q = ! ∙-unit-r q
+
+transport-≡-l : ∀ {i} {A : Type i} {x y : A} (a : A) (p : x ≡ y) (q : x ≡ a)
+                → transport (λ x → x ≡ a) p q ≡ ! p ∙ q
+transport-≡-l a refl refl = ! ∙-inv-r refl
+
+transport-≡-r : ∀ {i} {A : Type i} {x y : A} (a : A) (p : x ≡ y) (q : a ≡ x)
+                → transport (λ x → a ≡ x) p q ≡ q ∙ p
+transport-≡-r a refl refl = refl
+
+transport-→ : ∀ {i j k} {X : Type i} (A : X → Type j) (B : X → Type k) {x y : X} (p : x ≡ y) (f : A x → B x)
+              → transport (λ x → A x → B x) p f ≡ (transport B p) ∘ f ∘ (transport A (! p))
+transport-→ A B refl f = refl
+
+transport-inv : ∀ {i j} {A : Type i} {x y : A} (B : A → Type j) (p : x ≡ y) (b : B y) → transport B p (transport B (! p) b) ≡ b
+transport-inv B p b = ! transport-∙ B (! p) p b ∙ ap (λ q → transport B q b) (∙-inv-l p)
+
+transport-inv' : ∀ {i j} {A : Type i} {x y : A} (B : A → Type j) (p : x ≡ y) (b : B x) → transport B (! p) (transport B p b) ≡ b
+transport-inv' B p b = ! transport-∙ B p (! p) b ∙ ap (λ q → transport B q b) (∙-inv-r p)
+
+transport-Π : ∀ {i j k} {X : Type i} (A : X → Type j) (B : (x : X) → A x → Type k) {x y : X} (p : x ≡ y) (f : (a : A x) → B x a)
+              → transport (λ x → (a : A x) → B x a) p f ≡ λ a → transport2 B p (transport-inv A p a) (f (transport A (! p) a))
+transport-Π A B refl f = refl
+
+×-ext : ∀ {i j} {A : Type i} {B : Type j} {x y : A × B} (p : fst x ≡ fst y) (q : snd x ≡ snd y) → x ≡ y
+×-ext refl refl = refl
+
+module _  {i j} {A : Type i} {B : A → Type j} where
+  Σ-ext : {x y : Σ A B} (p : fst x ≡ fst y) (q : transport B p (snd x) ≡ snd y) → x ≡ y
+  Σ-ext refl refl = refl
+
+  Σ-ext-∙ : {x y z : Σ A B} → (p : fst x ≡ fst y) (p' : fst y ≡ fst z) (q : transport B p (snd x) ≡ snd y) (q' : transport B p' (snd y) ≡ snd z)
+            → Σ-ext (p ∙ p') (transport-∙ B p p' (snd x) ∙ ap (transport B p') q ∙ q') ≡ Σ-ext p q ∙ Σ-ext p' q'
+  Σ-ext-∙ refl refl refl refl = refl
+
+  Σ-ext-fst : {x y : Σ A B} → (p : fst x ≡ fst y) (q : transport B p (snd x) ≡ snd y) → ap fst (Σ-ext p q) ≡ p
+  Σ-ext-fst refl refl = refl
+
+  Σ-ext-! : {x y : Σ A B} (p : fst x ≡ fst y) (q : transport B p (snd x) ≡ snd y)
+            → ! (Σ-ext p q)  ≡ Σ-ext (! p) ((ap (transport B (! p)) (! q)) ∙ (transport-inv' B p (snd x))) 
+  Σ-ext-! refl refl = refl
+
+  Σ-ext-ext : {x y : Σ A B} {p p' : fst x ≡ fst y} {q : transport B p (snd x) ≡ snd y}
+                                                    {q' : transport B p' (snd x) ≡ snd y}
+              (P : p ≡ p') (Q : transport (λ p → transport B p (snd x) ≡ snd y) P q ≡ q')
+              → Σ-ext p q ≡ Σ-ext p' q'
+  Σ-ext-ext refl refl = refl
+
+  Σ-lift : {x y : A} (b : B x) (p : x ≡ y) → (x , b) ≡ (y , transport B p b)
+  Σ-lift b p = Σ-ext p refl
+
+transport-Σ : ∀ {i j k} {X : Type i} (A : X → Type j) (B : (x : X) → A x → Type k) {x y : X} (p : x ≡ y) (u : Σ (A x) (B x))
+              → transport (λ x → Σ (A x) (B x)) p u ≡ ((transport A p (fst u)) , transport2 B p refl (snd u))
+transport-Σ A B refl u = refl
+
+apd : ∀ {i j} {A : Type i} {B : A → Type j} {x y : A} (f : (x : A) → B x) (p : x ≡ y) → transport B p (f x) ≡ f y
+apd f refl = refl
+
+apd-nd : ∀ {i j} {A : Type i} {B : Type j} {x y : A} (f : A → B) (p : x ≡ y)
+         → apd f p ≡ transport-cst p (f x) ∙ ap f p
+apd-nd f refl = refl
+
+apnd : ∀ {i j} {A : Type i} {B : Type j} {x y : A} (f : A → B) (p : x ≡ y)
+       → ap f p ≡ ! transport-cst p (f x) ∙ apd f p
+apnd f refl = refl
+
+ap-transport-cst : ∀ {i j k} {A : Type i} {x y : A} {B : Type j} {B' : Type k} (f : B → B') (p : x ≡ y) (b : B)
+                   → ap f (transport-cst p b) ≡ ! transport-nat (λ _ → B) (λ _ → B') f p b ∙ transport-cst p (f b)
+ap-transport-cst f refl b = refl
